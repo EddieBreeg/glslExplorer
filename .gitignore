@@ -1,0 +1,9 @@
+build/
+**bin/
+out/
+.vs*
+CMakeSettings.json
+
+*.out
+*.lib
+*.exe
