@@ -7,3 +7,5 @@ CMakeSettings.json
 *.out
 *.lib
 *.exe
+
+**lib/
