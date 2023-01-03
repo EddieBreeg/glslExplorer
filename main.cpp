@@ -198,7 +198,7 @@ public:
                 auto&& p = parseUniform(line);
                 if(p.type == UserParamType_t::unsupported)
                     continue;
-                _shaderSettings.emplace_back(parseUniform(line));
+                _shaderSettings.emplace_back(std::move(p));
             }
             ss << line << '\n';
         }

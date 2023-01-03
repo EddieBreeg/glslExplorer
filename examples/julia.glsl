@@ -1,7 +1,7 @@
 uniform vec2 C0;
-uniform float R;
-uniform float speed;
-uniform int maxIter;
+uniform float R = .1;
+uniform float speed = 1.0;
+uniform int maxIter = 256;
 
 vec2 f(vec2 z, vec2 C){
     return vec2(z.x*z.x - z.y*z.y, 2*z.x*z.y) + C;

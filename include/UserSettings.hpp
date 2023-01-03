@@ -22,7 +22,7 @@ union ParamValue_t
 struct UserParam
 {
     std::string name;
-    UserParamType_t type;
+    UserParamType_t type = UserParamType_t::unsupported;
     ParamValue_t value;
 };
 

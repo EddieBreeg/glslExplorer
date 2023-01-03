@@ -1,10 +1,19 @@
 #include <string_view>
+
+#include <regex>
+
 #include <iostream>
-#include <UserSettings.hpp>
 
 int main(int argc, char const *argv[])
 {
-    UserParam p = parseUniform("uniform float foobar;");
-    std::cout << p.name << ' ' << (unsigned)p.type << '\n';
+    std::regex pattern("[+-]?((([0-9]*\\.)?[0-9]+)|([0-9]+\\.?))");
+    
+    std::cout << std::regex_match("1.67", pattern) << '\n';
+    std::cout << std::regex_match("1.", pattern) << '\n';
+    std::cout << std::regex_match(".1", pattern) << '\n';
+    std::cout << std::regex_match("3", pattern) << '\n';
+    std::cout << std::regex_match("+3", pattern) << '\n';
+    std::cout << std::regex_match("-3.2", pattern) << '\n';
+
     return 0;
 }
