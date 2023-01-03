@@ -1,21 +1,6 @@
 #include <UserSettings.hpp>
 #include <regex>
 
-static inline std::string_view trimWhiteSpace(std::string_view str)
-{
-    size_t i = 0;
-    while(i < str.size() &&  iswspace(str[i])) ++i;
-    return str.substr(i);
-}
-static inline std::string_view getWord(std::string_view str)
-{
-    size_t p = 0;
-    while(p < str.size() && (std::isalnum(str[p]) || str[p] == '_')){
-        ++p;
-    }
-    return str.substr(0, p);
-}
-
 static constexpr const char *typeNames[] = {
     "float",
     "vec2",
@@ -43,6 +28,7 @@ void parseDefaultValue(std::string_view v, UserParam& p)
     unsigned maxMatches = ((unsigned)p.type & 3) + 1;
     std::regex pattern;
     std::regex_iterator<std::string_view::iterator> end;
+    bool ignoreFirst = std::regex_search(v.data(), std::regex("\\d[ \\t]*\\("));
     switch (p.type)
     {
     case UserParamType_t::f1:
@@ -52,10 +38,13 @@ void parseDefaultValue(std::string_view v, UserParam& p)
         pattern = MATCH_NUMBER; // one hell of an expression for such a simple thing...
         {
         decltype(end) it(v.begin(), v.end(), pattern);
+        if(ignoreFirst) ++it;
         float *out = p.value.f;
         for(size_t i=0; it != end && i < maxMatches; ++it, ++i){
             *out++ = (float)atof(it->str().c_str());
         }
+        while(out != std::end(p.value.f))
+            *out++ = 1.f;
         }
         break;
     case UserParamType_t::i1:
@@ -65,6 +54,7 @@ void parseDefaultValue(std::string_view v, UserParam& p)
         pattern = MATCH_NUMBER;
         {
         decltype(end) it(v.begin(), v.end(), pattern);
+        if(ignoreFirst) ++it;
         int *out = p.value.i;
         for(size_t i=0; it != end && i < maxMatches; ++it, ++i){
             *out++ = atoi(it->str().c_str());
@@ -77,6 +67,7 @@ void parseDefaultValue(std::string_view v, UserParam& p)
         pattern = MATCH_BOOLEAN;
         {
         decltype(end) it(v.begin(), v.end(), pattern);
+        if(ignoreFirst) ++it;
         bool *out = p.value.b;
         for(size_t i=0; it != end && i < maxMatches; ++it, ++i){
             std::string s=it->str();

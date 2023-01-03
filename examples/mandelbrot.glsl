@@ -1,3 +1,5 @@
+uniform vec4 uColor = vec4(1);
+
 void main(){
     vec2 z_n = vec2(0);
     int i = 0;
@@ -6,5 +8,5 @@ void main(){
         ++i;
     }
     float fac = float(i) / 256.0;
-    color = fac * vec4(1, 1, 0, 1);
+    color = fac * uColor;
 }

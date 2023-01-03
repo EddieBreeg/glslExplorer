@@ -23,7 +23,7 @@ private:
 
     std::chrono::steady_clock::time_point _start;
     float _scale = 1.0f;
-    int _mouseSensitivity = 2;
+    int _mouseSensitivity = 4;
     bool _fileErrorPopup = false;
     struct { float x, y, z, w; } _offset = {};
     struct { float x, y; } _mouseMotion;
@@ -170,7 +170,7 @@ public:
         ImGui::DragFloat4("Position", (float*)&_offset, .005f, 
             std::numeric_limits<float>::lowest(),
             std::numeric_limits<float>::max(), "%f");
-        ImGui::SliderInt("Mouse sensitivity", &_mouseSensitivity, 1, 10);
+        ImGui::SliderInt("Mouse sensitivity", &_mouseSensitivity, 1, 20);
         if(ImGui::TreeNode("Shader Parameters")){
             userSettingsPanel();
             ImGui::TreePop();
