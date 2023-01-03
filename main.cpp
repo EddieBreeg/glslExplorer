@@ -5,10 +5,11 @@
 #include <imgui/imgui.h>
 #include <numeric>
 #include <errno.h>
-#include <stdio.h>
+#include <fstream>
 #include <sstream>
 #include <filesystem>
 #include <cmath>
+#include <UserSettings.hpp>
 
 class GLExplorer: public GLBase::Application
 {
@@ -18,8 +19,11 @@ private:
     GLBase::VertexArray _vao;
     GLBase::Shader _shader;
     std::string _filePath;
+    std::vector<UserParam> _shaderSettings;
 
+    std::chrono::steady_clock::time_point _start;
     float _scale = 1.0f;
+    int _mouseSensitivity = 2;
     bool _fileErrorPopup = false;
     struct { float x, y, z, w; } _offset = {};
     struct { float x, y; } _mouseMotion;
@@ -29,6 +33,7 @@ public:
         _ibo(nullptr, 6, GL_STATIC_DRAW),
         _vao(), _shader(vertexShader, defaultFragShader)
     {
+        _start = std::chrono::steady_clock::now();
         _vao.addBuffer(_vbo, GLBase::VertexLayout<1>(
             GLBase::VertexLayoutElement::create<float>(3)
         ));
@@ -48,19 +53,19 @@ public:
         _ibo.unbind();
     }
     void userInputs(std::pair<int, int> winSize, std::chrono::duration<double> delta){
+        if(ImGui::GetIO().WantCaptureMouse) return;
         static auto mouseOld = getMousePos();
         auto mouseNew = getMousePos();
         _mouseMotion = {mouseNew.x-mouseOld.x, mouseOld.y-mouseNew.y}; // y axis is inverted
         mouseOld = mouseNew;
         if(glfwGetMouseButton(_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS){
-            float speed = 1000.f * _scale * (float)delta.count();
+            float speed = _mouseSensitivity * _scale;
             if(glfwGetKey(_window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){                
-                _scale *= expf(-_mouseMotion.x * (float)delta.count());
+                _scale *= expf(-_mouseSensitivity*_mouseMotion.x / winSize.first);
             }
             else{
                 _offset.x -= _mouseMotion.x * speed / float(winSize.first);
                 _offset.y -= _mouseMotion.y * speed / float(winSize.second);
-
             }
         }
     }
@@ -72,7 +77,9 @@ public:
         userInputs(size, delta);
         float ratio = float(size.first) / float(size.second);
         _shader.bind();
+        std::chrono::duration<float> time = std::chrono::steady_clock::now() - _start;
         _shader.setUniform("uRatio", ratio);
+        _shader.setUniform("time", time.count());
         _shader.setUniform("uScale", _scale);
         _shader.setUniform("uOffset", _offset.x, _offset.y, _offset.z, _offset.w);
         updateUI();
@@ -92,13 +99,50 @@ public:
         }
         return 0;
     }
-    static void filePathInput(const char *label, std::string& out){
+    static void stringInput(const char *label, std::string& out){
         ImGui::InputText(label, out.data(), out.capacity(), 
             ImGuiInputTextFlags_CallbackResize, textSizeCallback, (void*)&out);
     }
+    void dispUserSettingValue(UserParam& val)
+    {
+        switch (val.type)
+        {
+        case UserParamType_t::f1:
+            ImGui::DragFloat(val.name.c_str(), val.value.f, 1.0f, 
+                std::numeric_limits<float>::lowest(),
+                std::numeric_limits<float>::max());
+            _shader.setUniform(val.name, val.value.f[0]);
+            break;
+        case UserParamType_t::f2:
+            ImGui::DragFloat2(val.name.c_str(), val.value.f, 1.0f, 
+                std::numeric_limits<float>::lowest(),
+                std::numeric_limits<float>::max());
+            _shader.setUniform(val.name, val.value.f[0], val.value.f[1]);
+            break;
+        case UserParamType_t::f3:
+            ImGui::DragFloat3(val.name.c_str(), val.value.f, 1.0f, 
+                std::numeric_limits<float>::lowest(),
+                std::numeric_limits<float>::max());
+            _shader.setUniform(val.name, val.value.f[0], val.value.f[1], val.value.f[2]);
+            break;
+        case UserParamType_t::f4:
+            ImGui::DragFloat4(val.name.c_str(), val.value.f, 1.0f, 
+                std::numeric_limits<float>::lowest(),
+                std::numeric_limits<float>::max());
+            _shader.setUniform(val.name, val.value.f[0], val.value.f[1], val.value.f[2], val.value.f[3]);
+            break;
+        default:
+            break;
+        }
+    }
+    void userSettingsPanel(){
+        for(auto& p: _shaderSettings)
+            dispUserSettingValue(p);
+    }
     void updateUI() {
-        ImGui::Begin("Settings");
-        filePathInput("Shader file", _filePath);
+        ImGui::Begin("Inspector");
+        ImGui::Text("%f", ImGui::GetIO().Framerate);
+        stringInput("Shader file", _filePath);
         if(ImGui::Button("Load")){
             _fileErrorPopup = !loadFragmentShaderFromFile(_filePath);
         }
@@ -106,6 +150,11 @@ public:
         ImGui::DragFloat4("Position", (float*)&_offset, .005f, 
             std::numeric_limits<float>::lowest(),
             std::numeric_limits<float>::max(), "%f");
+        ImGui::SliderInt("Mouse sensitivity", &_mouseSensitivity, 1, 10);
+        if(ImGui::TreeNode("Shader Parameters")){
+            userSettingsPanel();
+            ImGui::TreePop();
+        }
         ImGui::End();
 
         if(_fileErrorPopup){
@@ -116,25 +165,25 @@ public:
         }
     }
     bool loadFragmentShaderFromFile(const std::string& path) {
-        FILE *f = fopen(path.c_str(), "rb");
-        if(!f) return 0;
-        
-        auto size = std::filesystem::file_size(path);
-        const size_t headerSize = std::end(FRAG_SHADER_HEADER) - FRAG_SHADER_HEADER;
-        std::vector<char> source(headerSize+size);
-        char *buf = std::copy(FRAG_SHADER_HEADER, FRAG_SHADER_HEADER+headerSize-1, source.data());
-        source.back() = 0;
-        size_t nRead=0;
-        do
-        {
-            size_t k = fread(buf, 1, size-nRead, f);
-            buf += k;
-            if (!k) return 0;
-            nRead += k;
-        } while(nRead != size);
-        _shader = GLBase::Shader(vertexShader, {source.data(), size+1});
-        fclose(f);
-        return 1;
+        std::ifstream f(path, std::ios_base::binary);
+        if(!f.is_open()) return 0;
+
+        std::string line;
+        std::stringstream ss;
+        ss << FRAG_SHADER_HEADER;
+        _shaderSettings.clear();
+        while(!f.eof()){
+            std::getline(f, line);
+            if(line.find("uniform") != (size_t)-1){
+                auto&& p = parseUniform(line);
+                if(p.type == UserParamType_t::unsupported)
+                    continue;
+                _shaderSettings.emplace_back(parseUniform(line));
+            }
+            ss << line << '\n';
+        }
+        _shader = GLBase::Shader(vertexShader, ss.str());
+        f.close();
     }
     virtual void draw(const GLBase::Renderer& renderer) const override {
         renderer.draw(_vao, _ibo, _shader);

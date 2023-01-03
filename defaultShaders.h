@@ -1,6 +1,8 @@
 #pragma once
 
-#define FRAG_SHADER_HEADER  "#version 450 core\nout vec4 color; \nin vec4 pos;\n#line 1\n\n"
+#define FRAG_SHADER_HEADER  "#version 450 core\nout vec4 color; \nin vec4 pos;\n"\
+"uniform float time;\n"\
+"\n#line 1\n\n"
 
 static constexpr const char *vertexShader = R"(
 #version 450 core

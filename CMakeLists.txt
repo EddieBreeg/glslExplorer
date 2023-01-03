@@ -20,6 +20,7 @@ add_library(GLBase STATIC
     ${CORE_SOURCES}
 )
 
+
 target_link_libraries(GLBase
     glew_s
     imgui
@@ -27,5 +28,9 @@ target_link_libraries(GLBase
 )
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
-add_executable(glExplorer main.cpp)
+add_executable(glExplorer 
+    src/userParams.cpp
+    main.cpp
+)
+add_executable(tests tests.cpp src/userParams.cpp)
 target_link_libraries(glExplorer GLBase)
