@@ -7,6 +7,11 @@
 #define TEXT_STYLE_WARN         "\033[38;5;202;1m"
 #define TEXT_STYLE_DEFAULT      "\033[0m"
 
+using ErroCallback_t = void (*)(const char*, void*);
+static ErroCallback_t _userCbk = nullptr;
+static void *_userCbkContext = nullptr;
+
+
 
 static inline GLuint createShader(GLenum type){
     glCheckCall(GLenum shader = glCreateShader(type));
@@ -39,6 +44,7 @@ static inline GLuint compileShader(GLuint shader){
     char *msg = (char*)alloca(logSize);
     glGetShaderInfoLog(shader, logSize, NULL, msg);
     std::cerr << TEXT_STYLE_ERROR "GLSL Error: " << msg << TEXT_STYLE_DEFAULT "\n";
+    if(_userCbk) _userCbk(msg, _userCbkContext);
     glDeleteShader(shader);
     return 0;
 }
@@ -54,6 +60,9 @@ static inline GLuint linkShader(GLuint prog){
     char *msg = (char*)alloca(logSize);
     glGetProgramInfoLog(prog, logSize, NULL, msg);
     std::cerr << TEXT_STYLE_ERROR "GLSL Error: " << msg << TEXT_STYLE_DEFAULT "\n";
+    if(_userCbk){
+        _userCbk(msg, _userCbkContext);
+    }
     glDeleteProgram(prog);
     return 0;
 }
@@ -71,6 +80,7 @@ static inline bool attachShader(GLuint& shader, GLuint& prog)
 
 namespace GLBase
 {
+
     Shader::Shader(){
         glCheckCall(_prog = glCreateProgram());
         _vsId = createShader(GL_VERTEX_SHADER);
@@ -128,6 +138,11 @@ namespace GLBase
         if(loc == -1)
             std::cerr << TEXT_STYLE_WARN "Warning: uniform '" << name << "' not found\n" TEXT_STYLE_DEFAULT;
         return _uniformCache[name.data()] = loc;
+    }
+    void Shader::setGLSLErrorCallback(ErroCallback_t cbk, void *context)
+    {
+        _userCbk = cbk;
+        _userCbkContext = context;
     }
 
     void Shader::setUniform(std::string_view name, float v0){

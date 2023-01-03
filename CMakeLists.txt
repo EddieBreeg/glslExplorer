@@ -28,9 +28,11 @@ target_link_libraries(GLBase
 )
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
+set(SOURCE_DIR  ${CMAKE_SOURCE_DIR}/src)
+
 add_executable(glExplorer 
-    src/userParams.cpp
+    ${SOURCE_DIR}/UserParams.cpp
     main.cpp
 )
-add_executable(tests tests.cpp src/userParams.cpp)
+add_executable(tests tests.cpp)
 target_link_libraries(glExplorer GLBase)

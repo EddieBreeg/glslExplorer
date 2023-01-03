@@ -2,6 +2,7 @@
 
 #include <string_view>
 #include <unordered_map>
+#include <string>
 
 
 namespace GLBase
@@ -46,7 +47,7 @@ namespace GLBase
         void setUniform(std::string_view name, unsigned v0, unsigned v1, unsigned v2);
         void setUniform(std::string_view name, unsigned v0, unsigned v1, unsigned v2, unsigned v3);
 
-
+        static void setGLSLErrorCallback(void (*cbk)(const char* msg, void *context), void *context);
         ~Shader();
     };
     

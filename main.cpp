@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <cmath>
 #include <UserSettings.hpp>
+#include <vector>
 
 class GLExplorer: public GLBase::Application
 {
@@ -26,13 +27,15 @@ private:
     int _mouseSensitivity = 4;
     bool _fileErrorPopup = false;
     struct { float x, y, z, w; } _offset = {};
-    struct { float x, y; } _mouseMotion;
+    struct float2 { float x, y; } _mouseMotion;
+    struct {std::string message; bool errStatus = false; } _glslStatus;
 public:
     GLExplorer(): GLBase::Application(500, 500, "GLSL Explorer", true, true),
         _vbo(nullptr, 3*sizeof(GLBase::Vector3), GL_STATIC_DRAW),
         _ibo(nullptr, 6, GL_STATIC_DRAW),
         _vao(), _shader(vertexShader, defaultFragShader)
     {
+        GLBase::Shader::setGLSLErrorCallback(onGLSLError, this);
         _start = std::chrono::steady_clock::now();
         _vao.addBuffer(_vbo, GLBase::VertexLayout<1>(
             GLBase::VertexLayoutElement::create<float>(3)
@@ -84,7 +87,7 @@ public:
         _shader.setUniform("uOffset", _offset.x, _offset.y, _offset.z, _offset.w);
         updateUI();
     }
-    struct{float x, y;} getMousePos(){
+    float2 getMousePos(){
         double x, y;
         glfwGetCursorPos(_window, &x, &y);
         return {float(x), float(y)};
@@ -159,6 +162,11 @@ public:
         for(auto& p: _shaderSettings)
             dispUserSettingValue(p);
     }
+    static void onGLSLError(const char *msg, void *data){
+        GLExplorer *app = (GLExplorer*)data;
+        app->_glslStatus.errStatus = false;
+        app->_glslStatus.message = msg;
+    }
     void updateUI() {
         ImGui::Begin("Inspector");
         ImGui::Text("%f", ImGui::GetIO().Framerate);
@@ -176,7 +184,11 @@ public:
             ImGui::TreePop();
         }
         ImGui::End();
-
+        if(_glslStatus.errStatus){
+            ImGui::Begin("GLSL Error");
+            ImGui::TextColored(ImVec4{1, 0, 0, 1}, "%s", _glslStatus.message.c_str());
+            ImGui::End();
+        }
         if(_fileErrorPopup){
             ImGui::Begin("Error", &_fileErrorPopup);
             ImGui::TextColored(ImVec4{1, 0, 0, 1}, "Couldn't load %s: %s",
@@ -203,7 +215,9 @@ public:
             ss << line << '\n';
         }
         _shader = GLBase::Shader(vertexShader, ss.str());
+        _glslStatus.errStatus = !_shader.isValid();
         f.close();
+        return 1;
     }
     virtual void draw(const GLBase::Renderer& renderer) const override {
         renderer.draw(_vao, _ibo, _shader);
