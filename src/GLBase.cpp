@@ -2,6 +2,7 @@
 #include <imgui/imgui_impl_opengl3.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <stdexcept>
+#include <chrono>
 
 namespace GLBase{
     Application::Application(int width, int height, const std::string_view& title, bool resizeable, bool maximized)
@@ -74,9 +75,14 @@ namespace GLBase{
 	}
 	void Application::run() {
 		/* simple loop */
+		using std::chrono::steady_clock, std::chrono::duration;
+		duration<double> delta;
+		steady_clock::time_point t = steady_clock::now();
 		while (processEvents()) {
+			delta = steady_clock::now() - t;
+			t = steady_clock::now();
 			newFrame();
-			update();
+			update(delta);
 			glfwGetFramebufferSize(_window, &_winSize.first, &_winSize.second);
 			render();
 		}

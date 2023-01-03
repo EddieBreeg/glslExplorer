@@ -1,5 +1,7 @@
 #pragma once
 
+#define FRAG_SHADER_HEADER  "#version 450 core\nout vec4 color; \nin vec4 pos;\n#line 1\n\n"
+
 static constexpr const char *vertexShader = R"(
 #version 450 core
 layout(location=0) in vec4 aPos;
@@ -15,18 +17,8 @@ void main()
 }
 )";
 
-static constexpr const char *defaultFragShader= R"(
-#version 450 core
-out vec4 color;
-in vec4 pos;
-void main() { 
-    float fac = 1-step(.5, length(pos.xy));
-    color = vec4(fac);
-}
-)";
+static constexpr const char *defaultFragShader= FRAG_SHADER_HEADER 
+    "void main(){ color = vec4(0); }";
 
-static constexpr const char *errorFragShader = R"(
-#version 450 core
-out vec4 color;
-void main() { color = vec4(1, 0, 1, 1); }
-)";
+static constexpr const char *errorFragShader = 
+    FRAG_SHADER_HEADER "void main(){color = vec4(1, 0, 1, 1);}";
