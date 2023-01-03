@@ -131,6 +131,26 @@ public:
                 std::numeric_limits<float>::max());
             _shader.setUniform(val.name, val.value.f[0], val.value.f[1], val.value.f[2], val.value.f[3]);
             break;
+        case UserParamType_t::i1:
+            ImGui::InputInt(val.name.c_str(), val.value.i, 1, 10);
+            _shader.setUniform(val.name, val.value.i[0]);
+            break;
+        case UserParamType_t::i2:
+            ImGui::InputInt2(val.name.c_str(), val.value.i);
+            _shader.setUniform(val.name, val.value.i[0], val.value.i[1]);
+            break;
+        case UserParamType_t::i3:
+            ImGui::InputInt3(val.name.c_str(), val.value.i);
+            _shader.setUniform(val.name, val.value.i[0], val.value.i[1], val.value.i[2]);
+            break;
+        case UserParamType_t::i4:
+            ImGui::InputInt4(val.name.c_str(), val.value.i);
+            _shader.setUniform(val.name, val.value.i[0], val.value.i[1], val.value.i[2], val.value.i[3]);
+            break;
+        case UserParamType_t::b1:
+            ImGui::Checkbox(val.name.c_str(), val.value.b);
+            _shader.setUniform(val.name, val.value.b[0]);
+            break;
         default:
             break;
         }
