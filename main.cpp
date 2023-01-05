@@ -21,10 +21,14 @@ private:
     GLBase::Shader _shader;
     std::string _filePath;
     std::vector<UserParam> _shaderSettings;
+    GLBase::FrameBuffer _fbo;
+    GLBase::Texture _tex;
 
+    bool _vsync = 0;
     std::chrono::steady_clock::time_point _start;
     float _scale = 1.0f;
     int _mouseSensitivity = 4;
+    float _sliderSpeed = 1.0f;
     bool _fileErrorPopup = false;
     struct { float x, y, z, w; } _offset = {};
     struct float2 { float x, y; } _mouseMotion;
@@ -33,7 +37,7 @@ public:
     GLExplorer(): GLBase::Application(500, 500, "GLSL Explorer", true, true),
         _vbo(nullptr, 3*sizeof(GLBase::Vector3), GL_STATIC_DRAW),
         _ibo(nullptr, 6, GL_STATIC_DRAW),
-        _vao(), _shader(vertexShader, defaultFragShader)
+        _vao(), _shader(vertexShader, defaultFragShader), _tex(500, 500)
     {
         GLBase::Shader::setGLSLErrorCallback(onGLSLError, this);
         _start = std::chrono::steady_clock::now();
@@ -54,6 +58,12 @@ public:
         _vao.unbind();
         _vbo.unbind();
         _ibo.unbind();
+        _fbo.attachTexture2D(_tex, 0);
+        unsigned status = _fbo.status();
+        if(status != GL_FRAMEBUFFER_COMPLETE) {
+            std::cout << GLBase::FrameBuffer::statusString(status) << '\n';
+            _fbo.unbind();
+        }
     }
     void userInputs(std::pair<int, int> winSize, std::chrono::duration<double> delta){
         if(ImGui::GetIO().WantCaptureMouse) return;
@@ -78,13 +88,12 @@ public:
         }
         auto size = windowSize();
         userInputs(size, delta);
-        float ratio = float(size.first) / float(size.second);
         _shader.bind();
         std::chrono::duration<float> time = std::chrono::steady_clock::now() - _start;
-        _shader.setUniform("uRatio", ratio);
+        _shader.setUniform("res", float(size.first), float(size.second));
         _shader.setUniform("time", time.count());
-        _shader.setUniform("uScale", _scale);
-        _shader.setUniform("uOffset", _offset.x, _offset.y, _offset.z, _offset.w);
+        _shader.setUniform("scale", _scale);
+        _shader.setUniform("offset", _offset.x, _offset.y, _offset.z, _offset.w);
         updateUI();
     }
     float2 getMousePos(){
@@ -111,25 +120,25 @@ public:
         switch (val.type)
         {
         case UserParamType_t::f1:
-            ImGui::DragFloat(val.name.c_str(), val.value.f, 1.0f, 
+            ImGui::DragFloat(val.name.c_str(), val.value.f, _sliderSpeed, 
                 std::numeric_limits<float>::lowest(),
                 std::numeric_limits<float>::max());
             _shader.setUniform(val.name, val.value.f[0]);
             break;
         case UserParamType_t::f2:
-            ImGui::DragFloat2(val.name.c_str(), val.value.f, 1.0f, 
+            ImGui::DragFloat2(val.name.c_str(), val.value.f, _sliderSpeed, 
                 std::numeric_limits<float>::lowest(),
                 std::numeric_limits<float>::max());
             _shader.setUniform(val.name, val.value.f[0], val.value.f[1]);
             break;
         case UserParamType_t::f3:
-            ImGui::DragFloat3(val.name.c_str(), val.value.f, 1.0f, 
+            ImGui::DragFloat3(val.name.c_str(), val.value.f, _sliderSpeed, 
                 std::numeric_limits<float>::lowest(),
                 std::numeric_limits<float>::max());
             _shader.setUniform(val.name, val.value.f[0], val.value.f[1], val.value.f[2]);
             break;
         case UserParamType_t::f4:
-            ImGui::DragFloat4(val.name.c_str(), val.value.f, 1.0f, 
+            ImGui::DragFloat4(val.name.c_str(), val.value.f, _sliderSpeed, 
                 std::numeric_limits<float>::lowest(),
                 std::numeric_limits<float>::max());
             _shader.setUniform(val.name, val.value.f[0], val.value.f[1], val.value.f[2], val.value.f[3]);
@@ -151,8 +160,20 @@ public:
             _shader.setUniform(val.name, val.value.i[0], val.value.i[1], val.value.i[2], val.value.i[3]);
             break;
         case UserParamType_t::b1:
-            ImGui::Checkbox(val.name.c_str(), val.value.b);
-            _shader.setUniform(val.name, val.value.b[0]);
+            ImGui::Checkbox(val.name.c_str(), &val.value.b);
+            _shader.setUniform(val.name, val.value.b);
+            break;
+        case UserParamType_t::b2:
+            ImGui::DragInt2(val.name.c_str(), val.value.i, _sliderSpeed, 0, 1);
+            _shader.setUniform(val.name, val.value.i[0], val.value.i[1]);
+            break;
+        case UserParamType_t::b3:
+            ImGui::DragInt3(val.name.c_str(), val.value.i, _sliderSpeed, 0, 1);
+            _shader.setUniform(val.name, val.value.i[0], val.value.i[1], val.value.i[2]);
+            break;
+        case UserParamType_t::b4:
+            ImGui::DragInt4(val.name.c_str(), val.value.i, _sliderSpeed, 0, 1);
+            _shader.setUniform(val.name, val.value.i[0], val.value.i[1], val.value.i[2], val.value.i[3]);
             break;
         default:
             break;
@@ -169,16 +190,26 @@ public:
     }
     void updateUI() {
         ImGui::Begin("Inspector");
-        ImGui::Text("%f", ImGui::GetIO().Framerate);
-        stringInput("Shader file", _filePath);
-        if(ImGui::Button("Load")){
-            _fileErrorPopup = !loadFragmentShaderFromFile(_filePath);
+        ImGui::Text("%f FPS", ImGui::GetIO().Framerate);
+        if(ImGui::TreeNode("General settings")){
+            stringInput("Shader file", _filePath);
+            if(ImGui::Button("Load")){
+                _fileErrorPopup = !loadFragmentShaderFromFile(_filePath);
+            }
+            ImGui::SameLine();
+            if(ImGui::Button("Reset time")){
+                _start = std::chrono::steady_clock::now();
+            }
+            ImGui::DragFloat("Scale", &_scale, .01f, 0.0F, std::numeric_limits<float>::max(), "%f");
+            ImGui::DragFloat4("Position", (float*)&_offset, .005f, 
+                std::numeric_limits<float>::lowest(),
+                std::numeric_limits<float>::max(), "%f");
+            ImGui::SliderInt("Mouse sensitivity", &_mouseSensitivity, 1, 20);
+            ImGui::SliderFloat("Slider sensitivity", &_sliderSpeed, 0.0f, 1);
+            if(ImGui::Checkbox("Vsync", &_vsync))
+                glfwSwapInterval(_vsync);
+            ImGui::TreePop();
         }
-        ImGui::DragFloat("Scale", &_scale, .01f, 0.0F, std::numeric_limits<float>::max(), "%f");
-        ImGui::DragFloat4("Position", (float*)&_offset, .005f, 
-            std::numeric_limits<float>::lowest(),
-            std::numeric_limits<float>::max(), "%f");
-        ImGui::SliderInt("Mouse sensitivity", &_mouseSensitivity, 1, 20);
         if(ImGui::TreeNode("Shader Parameters")){
             userSettingsPanel();
             ImGui::TreePop();

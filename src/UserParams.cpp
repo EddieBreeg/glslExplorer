@@ -35,7 +35,7 @@ void parseDefaultValue(std::string_view v, UserParam& p)
     case UserParamType_t::f2:
     case UserParamType_t::f3:
     case UserParamType_t::f4:
-        pattern = MATCH_NUMBER; // one hell of an expression for such a simple thing...
+        pattern = MATCH_NUMBER; 
         {
         decltype(end) it(v.begin(), v.end(), pattern);
         if(ignoreFirst) ++it;
@@ -68,7 +68,7 @@ void parseDefaultValue(std::string_view v, UserParam& p)
         {
         decltype(end) it(v.begin(), v.end(), pattern);
         if(ignoreFirst) ++it;
-        bool *out = p.value.b;
+        int *out = p.value.i;
         for(size_t i=0; it != end && i < maxMatches; ++it, ++i){
             std::string s=it->str();
             if(isalpha(s[0]))
