@@ -19,9 +19,10 @@ private:
     GLBase::IndexBuffer _ibo;
     GLBase::VertexArray _vao;
     GLBase::Shader _shader;
+    GLBase::Shader _renderShader;
     std::string _filePath;
     std::vector<UserParam> _shaderSettings;
-    GLBase::FrameBuffer _fbo;
+    GLBase::FrameBuffer _renderFBO;
     GLBase::Texture _tex;
 
     bool _vsync = 0;
@@ -34,10 +35,12 @@ private:
     struct float2 { float x, y; } _mouseMotion;
     struct {std::string message; bool errStatus = false; } _glslStatus;
 public:
-    GLExplorer(): GLBase::Application(500, 500, "GLSL Explorer", true, true),
+    GLExplorer(): GLBase::Application(800, 800, "GLSL Explorer", true, true),
         _vbo(nullptr, 3*sizeof(GLBase::Vector3), GL_STATIC_DRAW),
         _ibo(nullptr, 6, GL_STATIC_DRAW),
-        _vao(), _shader(vertexShader, defaultFragShader), _tex(500, 500)
+        _vao(), _shader(vertexShader, defaultFragShader), 
+        _renderShader(vertexShader, simpleTextureShader),
+        _tex(800, 800)
     {
         GLBase::Shader::setGLSLErrorCallback(onGLSLError, this);
         _start = std::chrono::steady_clock::now();
@@ -58,12 +61,9 @@ public:
         _vao.unbind();
         _vbo.unbind();
         _ibo.unbind();
-        _fbo.attachTexture2D(_tex, 0);
-        unsigned status = _fbo.status();
-        if(status != GL_FRAMEBUFFER_COMPLETE) {
-            std::cout << GLBase::FrameBuffer::statusString(status) << '\n';
-            _fbo.unbind();
-        }
+        _renderFBO.attachTexture2D(_tex, 0);
+        _renderShader.bind();
+        _renderShader.setUniform("tex", 0);
     }
     void userInputs(std::pair<int, int> winSize, std::chrono::duration<double> delta){
         if(ImGui::GetIO().WantCaptureMouse) return;
@@ -87,7 +87,11 @@ public:
             _shader = GLBase::Shader(vertexShader, errorFragShader);
         }
         auto size = windowSize();
+        if(wasWindowResized()){
+            _tex.resize(size.first, size.second);
+        }
         userInputs(size, delta);
+        glViewport(0, 0, size.first, size.second);
         _shader.bind();
         std::chrono::duration<float> time = std::chrono::steady_clock::now() - _start;
         _shader.setUniform("res", float(size.first), float(size.second));
@@ -117,6 +121,7 @@ public:
     }
     void dispUserSettingValue(UserParam& val)
     {
+        _shader.bind();
         switch (val.type)
         {
         case UserParamType_t::f1:
@@ -251,7 +256,18 @@ public:
         return 1;
     }
     virtual void draw(const GLBase::Renderer& renderer) const override {
+        unsigned status = _renderFBO.status();
+        if(status != GL_FRAMEBUFFER_COMPLETE) {
+            std::cout << "Incomplete framebuffer: " << GLBase::FrameBuffer::statusString(status) << '\n';
+            _renderFBO.unbind();
+            return;
+        }
+        renderer.clear();
         renderer.draw(_vao, _ibo, _shader);
+
+        _renderFBO.unbind();
+        renderer.clear();
+        renderer.draw(_vao, _ibo, _renderShader);
     }
     ~GLExplorer() = default;
 };

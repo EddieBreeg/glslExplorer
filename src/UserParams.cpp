@@ -43,8 +43,7 @@ void parseDefaultValue(std::string_view v, UserParam& p)
         for(size_t i=0; it != end && i < maxMatches; ++it, ++i){
             *out++ = (float)atof(it->str().c_str());
         }
-        while(out != std::end(p.value.f))
-            *out++ = 1.f;
+        p.value.f[3] = float(p.type == UserParamType_t::f4 && it != end);
         }
         break;
     case UserParamType_t::i1:
@@ -60,6 +59,7 @@ void parseDefaultValue(std::string_view v, UserParam& p)
             *out++ = atoi(it->str().c_str());
         }
         }
+        break;
     case UserParamType_t::b1:
     case UserParamType_t::b2:
     case UserParamType_t::b3:
@@ -81,10 +81,11 @@ void parseDefaultValue(std::string_view v, UserParam& p)
     }
 }
 
+
 UserParam parseUniform(std::string_view line)
 {
     UserParam p;
-    std::regex pattern(R"([a-zA-Z0-9]+)"); // pattern to match a word
+    std::regex pattern(R"([a-zA-Z0-9_]+)"); // pattern to match a word
     std::regex_iterator<decltype(line)::iterator> it(line.begin(), line.end(), pattern);
     decltype(it) end;
     if(std::distance(++it, end) < 2) {

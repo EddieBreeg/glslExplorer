@@ -45,7 +45,8 @@ vec2 f(vec2 z, vec2 C){
 
 void main(){
     int i = 0;
-    vec2 z = pos.xy;
+    vec2 z = pos.xy*scale+offset.xy;
+    z.x *= res.x / res.y;
     vec2 C = C0*C0*C0;
     while(i++ < maxIter){
         z = f(z, C + R*vec2(cos(frequency*time+phase), sin(frequency*time+phase)));

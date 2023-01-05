@@ -13,7 +13,10 @@ namespace GLBase {
         Renderer _renderer;
         void newFrame() const;
         std::pair<int, int> _winSize;
+        bool _winResized = false;
         void render() const;
+    protected:
+        bool wasWindowResized() const;
     public:
         GLFWwindow *_window;
         std::pair<int, int> windowSize() const { return _winSize; }

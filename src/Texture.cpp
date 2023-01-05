@@ -9,13 +9,25 @@ namespace GLBase
     {
         glCheckCall(glGenTextures(1, &_id));
         bind();
-        glCheckCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _w, _h, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
         glCheckCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
         glCheckCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
         glCheckCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER));
         glCheckCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER));
-        unbind();
-        
+        resize(width, height);
+    }
+    Texture::Texture(){
+        glCheckCall(glGenTextures(1, &_id));
+        bind();
+        glCheckCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+        glCheckCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+        glCheckCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER));
+        glCheckCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER));
+    }
+    void Texture::resize(unsigned w, unsigned h){
+        bind();
+        glCheckCall(
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr)
+        );
     }
     void Texture::bind() const {
         glCheckCall(glBindTexture(GL_TEXTURE_2D, _id));
@@ -25,6 +37,7 @@ namespace GLBase
     }
     Texture::~Texture()
     {
+        glCheckCall(glDeleteTextures(1, &_id));
     }
 
 } // namespace GLBase

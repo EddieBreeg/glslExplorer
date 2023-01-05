@@ -29,6 +29,7 @@ namespace GLBase
         glCheckCall(
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+index, GL_TEXTURE_2D,tex.getID(), 0);
         );
+        unbind();
     }
     #define FB_STATUS_CASE(name)    case name: return #name
     const char * FrameBuffer::statusString(unsigned status){

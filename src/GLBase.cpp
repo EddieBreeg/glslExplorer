@@ -60,8 +60,6 @@ namespace GLBase{
     }
     void Application::render() const {
 		ImGui::Render();
-		glCheckCall(glViewport(0, 0, _winSize.first, _winSize.second));
-		_renderer.clear(); // clear the screen
 		draw(_renderer); // let the user render things out
 
 		// draw the UI
@@ -73,6 +71,7 @@ namespace GLBase{
 		glfwPollEvents();
         return  !(glfwWindowShouldClose(_window));
 	}
+	bool Application::wasWindowResized() const { return _winResized; }
 	void Application::run() {
 		/* simple loop */
 		using std::chrono::steady_clock, std::chrono::duration;
@@ -83,7 +82,10 @@ namespace GLBase{
 			t = steady_clock::now();
 			newFrame();
 			update(delta);
-			glfwGetFramebufferSize(_window, &_winSize.first, &_winSize.second);
+			std::pair<int, int> winSize;
+			glfwGetFramebufferSize(_window, &winSize.first, &winSize.second);
+			_winResized = winSize != _winSize;
+			_winSize = winSize;
 			render();
 		}
 	}
