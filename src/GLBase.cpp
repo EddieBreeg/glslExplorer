@@ -71,7 +71,7 @@ namespace GLBase{
 	}
 	bool Application::processEvents() {
 		glfwPollEvents();
-        return  !(glfwGetKey(_window, GLFW_KEY_ESCAPE) == GLFW_PRESS || glfwWindowShouldClose(_window));
+        return  !(glfwWindowShouldClose(_window));
 	}
 	void Application::run() {
 		/* simple loop */

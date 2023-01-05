@@ -2,6 +2,7 @@
 
 #include "math/Vector.hpp"
 #include "core/Renderer.hpp"
+#include "core/FrameBuffer.hpp"
 #include <GLFW/glfw3.h>
 #include <chrono>
 

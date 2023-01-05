@@ -16,7 +16,7 @@ union ParamValue_t
     float f[4] {};
     int i[4];
     unsigned u[4];
-    bool b[4];
+    bool b;
 };
 
 struct UserParam
