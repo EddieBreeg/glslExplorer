@@ -23,7 +23,13 @@ private:
     std::string _filePath;
     std::vector<UserParam> _shaderSettings;
     GLBase::FrameBuffer _renderFBO;
-    GLBase::Texture _tex;
+    GLBase::Texture _textures[2];
+
+    int _selectedRenderPass = 0;
+    static constexpr const char *_renderPasses[] = {
+        "Base Color",
+        "Normal"
+    };
 
     bool _vsync = 0;
     std::chrono::steady_clock::time_point _start;
@@ -39,8 +45,7 @@ public:
         _vbo(nullptr, 3*sizeof(GLBase::Vector3), GL_STATIC_DRAW),
         _ibo(nullptr, 6, GL_STATIC_DRAW),
         _vao(), _shader(vertexShader, defaultFragShader), 
-        _renderShader(vertexShader, simpleTextureShader),
-        _tex(800, 800)
+        _renderShader(vertexShader, simpleTextureShader)
     {
         GLBase::Shader::setGLSLErrorCallback(onGLSLError, this);
         _start = std::chrono::steady_clock::now();
@@ -61,7 +66,13 @@ public:
         _vao.unbind();
         _vbo.unbind();
         _ibo.unbind();
-        _renderFBO.attachTexture2D(_tex, 0);
+        for (size_t i = 0; i < std::extent_v<decltype(_textures)>; i++)
+        {
+            _textures[i].resize(800, 800);
+            _renderFBO.attachTexture2D(_textures[i], i);
+        }
+        
+        
         _renderShader.bind();
         _renderShader.setUniform("tex", 0);
     }
@@ -88,8 +99,10 @@ public:
         }
         auto size = windowSize();
         if(wasWindowResized()){
-            _tex.resize(size.first, size.second);
+            for(auto& t: _textures)
+                t.resize(size.first, size.second);
         }
+        _textures[_selectedRenderPass].bind();
         userInputs(size, delta);
         glViewport(0, 0, size.first, size.second);
         _shader.bind();
@@ -213,6 +226,14 @@ public:
             ImGui::SliderFloat("Slider sensitivity", &_sliderSpeed, 0.0f, 1);
             if(ImGui::Checkbox("Vsync", &_vsync))
                 glfwSwapInterval(_vsync);
+            if(ImGui::ListBox("Render pass", &_selectedRenderPass, _renderPasses, 2)){
+                _renderShader.bind();
+                _renderShader.setUniform("tex", _selectedRenderPass);
+                glCheckCall(
+                glActiveTexture(GL_TEXTURE0+_selectedRenderPass)
+                );
+                _renderShader.unbind();
+            }
             ImGui::TreePop();
         }
         if(ImGui::TreeNode("Shader Parameters")){
@@ -262,6 +283,12 @@ public:
             _renderFBO.unbind();
             return;
         }
+        static constexpr size_t nPasses = std::extent_v<decltype(_textures)>;
+        unsigned renderBuffers[nPasses];
+        for(size_t i = 0; i < nPasses; ++i)
+            renderBuffers[i] = GL_COLOR_ATTACHMENT0 + i;
+        glCheckCall(
+        glDrawBuffers(nPasses, renderBuffers));
         renderer.clear();
         renderer.draw(_vao, _ibo, _shader);
 

@@ -13,7 +13,9 @@ namespace GLBase
         glCheckCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
         glCheckCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER));
         glCheckCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER));
-        resize(width, height);
+        glCheckCall(
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _w, _h, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr)
+        );
     }
     Texture::Texture(){
         glCheckCall(glGenTextures(1, &_id));
@@ -25,6 +27,8 @@ namespace GLBase
     }
     void Texture::resize(unsigned w, unsigned h){
         bind();
+        _w = w;
+        _h = h;
         glCheckCall(
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr)
         );
