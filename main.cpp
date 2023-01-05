@@ -11,6 +11,7 @@
 #include <cmath>
 #include <UserSettings.hpp>
 #include <vector>
+#include <screenshot.h>
 
 class GLExplorer: public GLBase::Application
 {
@@ -25,6 +26,7 @@ private:
     GLBase::FrameBuffer _renderFBO;
     GLBase::Texture _textures[3];
     GLBase::Texture _noise;
+
 
     int _selectedRenderPass = 0;
     static constexpr const char *_renderPasses[] = {
@@ -42,6 +44,7 @@ private:
     struct { float x, y, z, w; } _offset = {};
     struct float2 { float x, y; } _mouseMotion;
     struct {std::string message; bool errStatus = false; } _glslStatus;
+    bool _saveFrame =false, _saveFrameStatus = true;
 public:
     GLExplorer(): GLBase::Application(800, 800, "GLSL Explorer", true, true),
         _vbo(nullptr, 3*sizeof(GLBase::Vector3), GL_STATIC_DRAW),
@@ -212,6 +215,13 @@ public:
         app->_glslStatus.message = msg;
     }
     void updateUI() {
+        if(!_saveFrameStatus){
+            _saveFrameStatus = true;
+            ImGui::Begin("Error", &_saveFrameStatus);
+            ImGui::Text("Couldn't save frame: %s", strerror(errno));
+            ImGui::End();
+        }
+
         ImGui::Begin("Inspector");
         ImGui::Text("%f FPS", ImGui::GetIO().Framerate);
         if(ImGui::TreeNode("General settings")){
@@ -243,6 +253,8 @@ public:
             userSettingsPanel();
             ImGui::TreePop();
         }
+
+        _saveFrame = ImGui::Button("Save screenshot");
         ImGui::End();
         if(_glslStatus.errStatus){
             ImGui::Begin("GLSL Error");
@@ -279,7 +291,7 @@ public:
         f.close();
         return 1;
     }
-    virtual void draw(const GLBase::Renderer& renderer) const override {
+    virtual void draw(const GLBase::Renderer& renderer) override {
         unsigned status = _renderFBO.status();
         if(status != GL_FRAMEBUFFER_COMPLETE) {
             std::cout << "Incomplete framebuffer: " << GLBase::FrameBuffer::statusString(status) << '\n';
@@ -300,6 +312,14 @@ public:
         _textures[_selectedRenderPass].bind(_selectedRenderPass);
         renderer.clear();
         renderer.draw(_vao, _ibo, _renderShader);
+        if (_saveFrame)
+        {
+            std::pair<int, int> winSize;
+            glfwGetFramebufferSize(_window, &winSize.first, &winSize.second);
+            _saveFrameStatus = saveFrame("out.png", winSize.first, winSize.second);
+        }
+        
+
     }
     ~GLExplorer() = default;
 };

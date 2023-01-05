@@ -1,6 +1,7 @@
 #pragma once
 
 #include <inttypes.h>
+#include <utility>
 
 #ifndef  __glew_h__
 #define GL_CLAMP_TO_BORDER 0x812D
@@ -26,6 +27,7 @@ namespace GLBase
         Texture(unsigned width, unsigned height, unsigned format, unsigned type, const void* data,
             unsigned wrapMode = GL_CLAMP_TO_BORDER);
         Texture();
+        std::pair<unsigned, unsigned> getSize() const;
         void setWrapMode(unsigned mode);
         void setFilterMode(unsigned mode);
         void resize(unsigned w, unsigned h);

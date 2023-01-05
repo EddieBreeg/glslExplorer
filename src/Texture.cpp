@@ -69,6 +69,9 @@ namespace GLBase
     void Texture::bind() const {
         glCheckCall(glBindTexture(GL_TEXTURE_2D, _id));
     }
+    std::pair<unsigned, unsigned> Texture::getSize() const {
+        return {_w, _h};
+    }
     void Texture::bind(unsigned unit) const {
         glCheckCall(glActiveTexture(GL_TEXTURE0+unit));
         glCheckCall(glBindTexture(GL_TEXTURE_2D, _id));

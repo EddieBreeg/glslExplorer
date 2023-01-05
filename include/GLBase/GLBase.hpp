@@ -15,7 +15,7 @@ namespace GLBase {
         void newFrame() const;
         std::pair<int, int> _winSize;
         bool _winResized = false;
-        void render() const;
+        void render();
     protected:
         bool wasWindowResized() const;
     public:
@@ -25,7 +25,7 @@ namespace GLBase {
         void run();
         virtual bool processEvents();
         virtual void update(std::chrono::duration<double> delta) = 0;
-        virtual void draw(const Renderer&) const = 0;
+        virtual void draw(const Renderer&) = 0;
         virtual ~Application();
     };
 }

@@ -58,7 +58,7 @@ namespace GLBase{
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui::NewFrame();
     }
-    void Application::render() const {
+    void Application::render() {
 		ImGui::Render();
 		draw(_renderer); // let the user render things out
 
