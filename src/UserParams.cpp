@@ -43,7 +43,7 @@ void parseDefaultValue(std::string_view v, UserParam& p)
         for(size_t i=0; it != end && i < maxMatches; ++it, ++i){
             *out++ = (float)atof(it->str().c_str());
         }
-        p.value.f[3] = float(p.type == UserParamType_t::f4 && it != end);
+        if (it != end) p.value.f[3] = 1.0f;
         }
         break;
     case UserParamType_t::i1:

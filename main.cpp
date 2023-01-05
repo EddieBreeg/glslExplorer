@@ -23,12 +23,14 @@ private:
     std::string _filePath;
     std::vector<UserParam> _shaderSettings;
     GLBase::FrameBuffer _renderFBO;
-    GLBase::Texture _textures[2];
+    GLBase::Texture _textures[3];
+    GLBase::Texture _noise;
 
     int _selectedRenderPass = 0;
     static constexpr const char *_renderPasses[] = {
         "Base Color",
-        "Normal"
+        "Normal",
+        "Combined"
     };
 
     bool _vsync = 0;
@@ -71,10 +73,13 @@ public:
             _textures[i].resize(800, 800);
             _renderFBO.attachTexture2D(_textures[i], i);
         }
-        
-        
+        _noise.setWrapMode(GL_REPEAT);
+        _noise.setFilterMode(GL_NEAREST);
+        GLBase::RNG& rng = GLBase::RNG::Instance();
+        std::vector<uint64_t> noiseData(2048*1024 /*2048*2048 RGBA pixels*/);
+        for(uint64_t& p: noiseData) p = rng();
+        _noise.writeData(2048, 2048, GL_RGBA, GL_UNSIGNED_BYTE, noiseData.data());
         _renderShader.bind();
-        _renderShader.setUniform("tex", 0);
     }
     void userInputs(std::pair<int, int> winSize, std::chrono::duration<double> delta){
         if(ImGui::GetIO().WantCaptureMouse) return;
@@ -226,12 +231,10 @@ public:
             ImGui::SliderFloat("Slider sensitivity", &_sliderSpeed, 0.0f, 1);
             if(ImGui::Checkbox("Vsync", &_vsync))
                 glfwSwapInterval(_vsync);
-            if(ImGui::ListBox("Render pass", &_selectedRenderPass, _renderPasses, 2)){
+            if(ImGui::ListBox("Render pass", &_selectedRenderPass, _renderPasses, 
+                    std::extent_v<decltype(_textures)>)){
                 _renderShader.bind();
                 _renderShader.setUniform("tex", _selectedRenderPass);
-                glCheckCall(
-                glActiveTexture(GL_TEXTURE0+_selectedRenderPass)
-                );
                 _renderShader.unbind();
             }
             ImGui::TreePop();
@@ -289,10 +292,12 @@ public:
             renderBuffers[i] = GL_COLOR_ATTACHMENT0 + i;
         glCheckCall(
         glDrawBuffers(nPasses, renderBuffers));
+        _noise.bind();
         renderer.clear();
         renderer.draw(_vao, _ibo, _shader);
-
         _renderFBO.unbind();
+
+        _textures[_selectedRenderPass].bind(_selectedRenderPass);
         renderer.clear();
         renderer.draw(_vao, _ibo, _renderShader);
     }

@@ -35,4 +35,5 @@ add_executable(glExplorer
     main.cpp
 )
 add_executable(tests tests.cpp)
+target_link_libraries(tests GLBase)
 target_link_libraries(glExplorer GLBase)

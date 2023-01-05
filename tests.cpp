@@ -1,19 +1,15 @@
-#include <string_view>
-
-#include <regex>
-
+#include <GLBase/core/RNG.hpp>
 #include <iostream>
 
 int main(int argc, char const *argv[])
 {
-    std::regex pattern("\\d[ \\t]*\\(");
-    
-    std::cout << std::regex_search("vec(", pattern) << '\n';
-    std::cout << std::regex_search("vec (", pattern) << '\n';
+    GLBase::RNG& rng = GLBase::RNG::Instance();
 
-    std::cout << std::regex_search("vec4(", pattern) << '\n';
-    std::cout << std::regex_search("vec4\t(", pattern) << '\n';
-    std::cout << std::regex_search("vec4  (", pattern) << '\n';
+    for (size_t i = 0; i < 10; i++)
+    {
+        std::cout << rng() << '\n';
+    }
+    
 
     return 0;
 }

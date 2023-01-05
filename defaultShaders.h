@@ -3,12 +3,14 @@
 #define FRAG_SHADER_HEADER  "#version 450 core\n"\
 "layout(location=0) out vec4 fragColor; \n"\
 "layout(location=1) out vec3 fragNormal; \n"\
+"layout(location=2) out vec4 fragCombined; \n"\
 "in vec4 pos;\n"\
 "in vec2 uv;\n" \
 "uniform float scale;\n"\
 "uniform vec4 offset;\n"\
 "uniform float time;\n"\
 "uniform vec2 res;\n"\
+"uniform sampler2D texNoise;\n"\
 "\n#line 0\n\n"
 
 static constexpr const char *vertexShader = R"(
@@ -27,7 +29,10 @@ void main()
 )";
 
 static constexpr const char *defaultFragShader= FRAG_SHADER_HEADER 
-    "void main(){ fragColor = vec4(uv.xy+offset.xy, 0, 1); fragNormal=vec3(0, 0, 1); }";
+    "void main(){ "
+    "float v = texture(texNoise, scale*uv+offset.xy).x;"
+    "fragColor = vec4(v); "
+    "fragNormal=vec3(0, 0, 1); }";
 
 static constexpr const char *errorFragShader = 
     FRAG_SHADER_HEADER "void main(){fragColor = vec4(1, 0, 1, 1);}";
