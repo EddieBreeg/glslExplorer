@@ -24,15 +24,20 @@ private:
     std::string _filePath;
     std::vector<UserParam> _shaderSettings;
     GLBase::FrameBuffer _renderFBO;
-    GLBase::Texture _textures[3];
+    GLBase::Texture _textures[8];
     GLBase::Texture _noise;
 
 
     int _selectedRenderPass = 0;
     static constexpr const char *_renderPasses[] = {
-        "Base Color",
-        "Normal",
-        "Combined"
+        "Pass 0",
+        "Pass 1",
+        "Pass 2",
+        "Pass 3",
+        "Pass 4",
+        "Pass 5",
+        "Pass 6",
+        "Pass 7",
     };
 
     bool _vsync = 0;

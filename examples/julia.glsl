@@ -55,5 +55,5 @@ void main(){
         }
     }
     int index = int(round(float(i)/float(maxIter) * 32));
-    fragColor = palette[index];
+    frag0 = palette[index];
 }

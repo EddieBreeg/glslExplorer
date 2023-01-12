@@ -68,18 +68,17 @@ void main()
     vec3 dy = vec3(0, 2/(res.y), 0);
     float R = voronoi(P+dx, temp);
     float B = voronoi(P-dy, temp);
-    fragNormal = normalize(vec3(
+    vec3 normal = normalize(vec3(
         (d-R)/dx.x,
         (B-d)/dy.y,
-        -1
-    ));
+        -1));
+    frag1 = vec4(.5 * normal + .5, 1);
     vec3 lightOffset = vec3(cos(speed*time), sin(speed*time), 0);
     float lightDistance = length(lightSource+lightOffset - P);
-    float lightValue = dot(normalize(lightSource+lightOffset - P), fragNormal) * lightPower 
+    float lightValue = dot(normalize(lightSource+lightOffset - P), normal) * lightPower 
         / pow(lightDistance, lightAttenuation);
-    fragCombined =  baseColor * lightValue;
+    frag2 =  baseColor * lightValue;
 
-    fragNormal = fragNormal /2 + .5;
     
-    fragColor = vec4(d);
+    frag0 = vec4(d);
 }

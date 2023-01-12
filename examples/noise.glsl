@@ -14,5 +14,5 @@ vec4 hash4(vec4 x){
 void main()
 {
     vec4 p = (scale*pos+offset)/scale;
-    fragColor = vec4(hash4(p).xyz, 1);
+    frag0 = vec4(hash4(p).xyz, 1);
 }

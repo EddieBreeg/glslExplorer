@@ -1,9 +1,14 @@
 #pragma once
 
 #define FRAG_SHADER_HEADER  "#version 450 core\n"\
-"layout(location=0) out vec4 fragColor; \n"\
-"layout(location=1) out vec3 fragNormal; \n"\
-"layout(location=2) out vec4 fragCombined; \n"\
+"layout(location=0) out vec4 frag0; \n"\
+"layout(location=1) out vec4 frag1; \n"\
+"layout(location=2) out vec4 frag2; \n"\
+"layout(location=3) out vec4 frag3; \n"\
+"layout(location=4) out vec4 frag4; \n"\
+"layout(location=5) out vec4 frag5; \n"\
+"layout(location=6) out vec4 frag6; \n"\
+"layout(location=7) out vec4 frag7; \n"\
 "in vec4 pos;\n"\
 "in vec2 uv;\n" \
 "uniform float scale;\n"\
@@ -30,12 +35,11 @@ void main()
 
 static constexpr const char *defaultFragShader= FRAG_SHADER_HEADER 
     "void main(){ "
-    "float v = texture(texNoise, scale*uv+offset.xy).x;"
-    "fragColor = vec4(v); "
-    "fragNormal=vec3(0, 0, 1); }";
+    "frag0 = vec4(0); "
+    "frag1=vec4(0, 0, 1, 1); }";
 
 static constexpr const char *errorFragShader = 
-    FRAG_SHADER_HEADER "void main(){fragColor = vec4(1, 0, 1, 1);}";
+    FRAG_SHADER_HEADER "void main(){frag0 = vec4(1, 0, 1, 1);}";
 
 static constexpr const char *simpleTextureShader = 
     "#version 450 core\n"

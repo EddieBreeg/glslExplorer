@@ -22,11 +22,12 @@ vec4 palette[16] = {
 
 void main(){
     vec2 C = pos.xy;
+    C.x *= res.x/res.y;
     vec2 Z = vec2(0);
     int i = 0;
     while(i++ < maxIter && dot(Z, Z) <= 4){
         Z = vec2(Z.x * Z.x - Z.y * Z.y, 2*Z.x*Z.y) + C;
     }
     int index = int(round(float(i) / float(maxIter) * 16));
-    fragColor = palette[index];
+    frag0 = palette[index];
 }
