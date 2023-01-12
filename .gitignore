@@ -9,3 +9,5 @@ CMakeSettings.json
 *.exe
 
 **lib/
+
+*.ini

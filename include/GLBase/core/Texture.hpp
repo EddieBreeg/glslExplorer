@@ -5,6 +5,7 @@
 
 #ifndef  __glew_h__
 #define GL_CLAMP_TO_BORDER 0x812D
+#define GL_RGB 0x1907
 #endif
 
 namespace GLBase
@@ -30,7 +31,7 @@ namespace GLBase
         std::pair<unsigned, unsigned> getSize() const;
         void setWrapMode(unsigned mode);
         void setFilterMode(unsigned mode);
-        void resize(unsigned w, unsigned h);
+        void resize(unsigned w, unsigned h, unsigned format=GL_RGB);
         void writeData(unsigned width, unsigned height, unsigned format, unsigned type, const void* data);
         void bind() const;
         void bind(unsigned unit) const;
@@ -42,5 +43,6 @@ namespace GLBase
 
 #ifndef __glew_h__
 #undef GL_CLAMP_TO_BORDER
+#undef GL_RGB
 #endif
 

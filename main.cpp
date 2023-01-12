@@ -45,6 +45,7 @@ private:
     struct float2 { float x, y; } _mouseMotion;
     struct {std::string message; bool errStatus = false; } _glslStatus;
     bool _saveFrame =false, _saveFrameStatus = true;
+    std::vector<uint8_t> _frameData;
 public:
     GLExplorer(): GLBase::Application(800, 800, "GLSL Explorer", true, true),
         _vbo(nullptr, 3*sizeof(GLBase::Vector3), GL_STATIC_DRAW),
@@ -76,6 +77,7 @@ public:
             _textures[i].resize(800, 800);
             _renderFBO.attachTexture2D(_textures[i], i);
         }
+        _frameData.reserve(800*800*3);
         _noise.setWrapMode(GL_REPEAT);
         _noise.setFilterMode(GL_NEAREST);
         GLBase::RNG& rng = GLBase::RNG::Instance();
@@ -109,6 +111,7 @@ public:
         if(wasWindowResized()){
             for(auto& t: _textures)
                 t.resize(size.first, size.second);
+            _frameData.resize(size.first * size.second * 3);
         }
         _textures[_selectedRenderPass].bind();
         userInputs(size, delta);
@@ -316,7 +319,7 @@ public:
         {
             std::pair<int, int> winSize;
             glfwGetFramebufferSize(_window, &winSize.first, &winSize.second);
-            _saveFrameStatus = saveFrame("out.png", winSize.first, winSize.second);
+            _saveFrameStatus = saveFrame("out.png", winSize.first, winSize.second, _frameData.data());
         }
         
 

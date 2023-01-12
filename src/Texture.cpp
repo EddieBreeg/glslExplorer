@@ -58,7 +58,8 @@ namespace GLBase
         glCheckCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, _wrapMode));
         glCheckCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, _wrapMode));
     }
-    void Texture::resize(unsigned w, unsigned h){
+    void Texture::resize(unsigned w, unsigned h, GLenum format){
+        _format = format;
         bind();
         _w = w;
         _h = h;

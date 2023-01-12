@@ -48,7 +48,7 @@ float voronoi(vec3 P, out vec4 outColor){
         vec3 t = offsets[i];
         vec3 cell = S+t;
         vec3 p = randomness*texture(texNoise, cell.xy/1e3).xyz;
-        float r = length(p+t - F);
+        float r = chebichev(p+t - F);
         if(r < d){
             d = r;
         }
