@@ -21,8 +21,9 @@ vec4 palette[16] = {
 };
 
 void main(){
-    vec2 C = pos.xy;
+    vec2 C = pos.xy * scale;
     C.x *= res.x/res.y;
+    C += offset.xy;
     vec2 Z = vec2(0);
     int i = 0;
     while(i++ < maxIter && dot(Z, Z) <= 4){

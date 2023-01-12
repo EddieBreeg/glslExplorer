@@ -6,5 +6,5 @@ void main(){
     frag4 = vec4(1, 0, 0, 1);
     frag5 = vec4(1, 0, 1, 1);
     frag6 = vec4(1, 1, 0, 1);
-    frag7 = vec4(1, 1, 1, 1);
+    frag7 = vec4(1);
 }

@@ -27,7 +27,6 @@ private:
     GLBase::Texture _textures[8];
     GLBase::Texture _noise;
 
-
     int _selectedRenderPass = 0;
     static constexpr const char *_renderPasses[] = {
         "Pass 0",
@@ -40,6 +39,7 @@ private:
         "Pass 7",
     };
 
+    bool _showInspector = true;
     bool _vsync = 0;
     std::chrono::steady_clock::time_point _start;
     float _scale = 1.0f;
@@ -229,7 +229,26 @@ public:
             ImGui::Text("Couldn't save frame: %s", strerror(errno));
             ImGui::End();
         }
+        if(ImGui::BeginMainMenuBar()){
+            if(ImGui::BeginMenu("View")){
+                ImGui::MenuItem("Show inspector", "Ctrl+1", &_showInspector);
+                ImGui::EndMenu();
+            }
+            ImGui::EndMainMenuBar();
+        }
+        if(_glslStatus.errStatus){
+            ImGui::Begin("GLSL Error");
+            ImGui::TextColored(ImVec4{1, 0, 0, 1}, "%s", _glslStatus.message.c_str());
+            ImGui::End();
+        }
+        if(_fileErrorPopup){
+            ImGui::Begin("Error", &_fileErrorPopup);
+            ImGui::TextColored(ImVec4{1, 0, 0, 1}, "Couldn't load %s: %s",
+                _filePath.c_str(), strerror(errno));
+            ImGui::End();
+        }
 
+        if(!_showInspector) return;
         ImGui::Begin("Inspector");
         ImGui::Text("%f FPS", ImGui::GetIO().Framerate);
         if(ImGui::TreeNode("General settings")){
@@ -264,17 +283,6 @@ public:
 
         _saveFrame = ImGui::Button("Save screenshot");
         ImGui::End();
-        if(_glslStatus.errStatus){
-            ImGui::Begin("GLSL Error");
-            ImGui::TextColored(ImVec4{1, 0, 0, 1}, "%s", _glslStatus.message.c_str());
-            ImGui::End();
-        }
-        if(_fileErrorPopup){
-            ImGui::Begin("Error", &_fileErrorPopup);
-            ImGui::TextColored(ImVec4{1, 0, 0, 1}, "Couldn't load %s: %s",
-                _filePath.c_str(), strerror(errno));
-            ImGui::End();
-        }
     }
     bool loadFragmentShaderFromFile(const std::string& path) {
         std::ifstream f(path, std::ios_base::binary);
