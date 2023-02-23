@@ -34,6 +34,15 @@ add_executable(glExplorer
     ${SOURCE_DIR}/UserParams.cpp
     main.cpp
 )
+if(${WIN32} AND NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    if(${MSVC})
+        target_link_options(glExplorer PRIVATE /SUBSYSTEM:WINDOWS)
+        else()
+        target_link_options(glExplorer PRIVATE -mwindows)
+    endif(${MSVC})
+    target_sources(glExplorer PRIVATE res.rc)
+endif(${WIN32} AND NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+
 add_executable(tests tests.cpp)
 target_link_libraries(tests GLBase)
 target_link_libraries(glExplorer GLBase)

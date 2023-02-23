@@ -11,3 +11,5 @@ CMakeSettings.json
 **lib/
 
 *.ini
+
+*.png
