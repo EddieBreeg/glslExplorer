@@ -53,6 +53,11 @@ In this section your can find the general setup of the program:
 - **Slider sensitivity**: How sensitive should the sliders be for the custom shader parameters
 - **Render pass**: Selects the output texture currently being displayed on screen
 
+### View options
+
+UI can be toggled by pressing tab. Fullscreen mode can also be toggled by pressing F11.
+Both options are accessible in the View menu, at the top of the screen when UI is visible.
+
 ### Navigation
 
 To pan the view, simply click and drag. To zoom in and out, hold shift and click and drag to the right/left.

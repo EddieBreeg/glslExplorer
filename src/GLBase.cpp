@@ -5,7 +5,8 @@
 #include <chrono>
 
 namespace GLBase{
-    Application::Application(int width, int height, const std::string_view& title, bool resizeable, bool maximized)
+    Application::Application(int width, int height, const char* title, bool resizeable, bool maximized,
+		GLFWkeyfun cbk)
     {
         /* inits glfw, OpenGL and ImGUI */
 		if(!glfwInit()){
@@ -13,6 +14,7 @@ namespace GLBase{
 			glfwGetError(&err);
 			throw std::runtime_error(err);
 		} 
+		_title = title;
 		glfwWindowHint(GLFW_RESIZABLE, resizeable);
 		glfwWindowHint(GLFW_MAXIMIZED, maximized);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -20,7 +22,7 @@ namespace GLBase{
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 		_winSize = {width, height};
 
-		_window = glfwCreateWindow(width, height, title.data(), NULL, NULL);
+		_window = glfwCreateWindow(width, height, title, NULL, NULL);
 		if(!_window) {
 			const char *err;
 			glfwGetError(&err);
@@ -29,6 +31,7 @@ namespace GLBase{
 
 		glfwMakeContextCurrent(_window);
     	glfwSwapInterval(0); // Disable vsync
+		glfwSetKeyCallback(_window, cbk);
 
 		auto err = glewInit();
 		if(err != GLEW_OK) throw std::runtime_error((const char*)glewGetErrorString(err));
@@ -72,6 +75,19 @@ namespace GLBase{
         return  !(glfwWindowShouldClose(_window));
 	}
 	bool Application::wasWindowResized() const { return _winResized; }
+	void Application::fullScreen(bool onOff){
+		if(_isFullScreen == onOff) return;
+		_isFullScreen = onOff;
+		if(!onOff){
+			glfwSetWindowMonitor(_window, nullptr, 0, 0, _winSize.first, _winSize.second, GLFW_DONT_CARE);
+			glfwMaximizeWindow(_window);
+			glfwGetWindowSize(_window, &_winSize.first, &_winSize.second);
+			return;
+		}
+		auto screen = glfwGetPrimaryMonitor();
+		auto mode = glfwGetVideoMode(screen);
+		glfwSetWindowMonitor(_window, screen, 0, 0, mode->width, mode->height, GLFW_DONT_CARE);
+	}
 	void Application::run() {
 		/* simple loop */
 		using std::chrono::steady_clock, std::chrono::duration;

@@ -27,6 +27,8 @@ private:
     GLBase::Texture _textures[8];
     GLBase::Texture _noise;
 
+    static GLExplorer* _instance;
+
     int _selectedRenderPass = 0;
     static constexpr const char *_renderPasses[] = {
         "Pass 0",
@@ -39,8 +41,9 @@ private:
         "Pass 7",
     };
 
-    bool _showInspector = true;
+    bool _fullScreen = false;
     bool _vsync = 0;
+    bool _showUI = true;
     std::chrono::steady_clock::time_point _start;
     float _scale = 1.0f;
     int _mouseSensitivity = 4;
@@ -51,13 +54,39 @@ private:
     struct {std::string message; bool errStatus = false; } _glslStatus;
     bool _saveFrame =false, _saveFrameStatus = true;
     std::vector<uint8_t> _frameData;
+    bool processEvents() override {
+        glfwPollEvents();
+        // if(glfwGetKey(_window, GLFW_KEY_TAB) == GLFW_PRESS)
+        //     _showUI = !_showUI;
+        // if(glfwGetKey(_window, GLFW_KEY_F11) == GLFW_PRESS){
+        //     fullScreen(_fullScreen = !_fullScreen);
+        // }
+        return !glfwWindowShouldClose(_window);
+    }
+    static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods){
+        if(action != GLFW_PRESS) return;
+        // std::cout << "Key pressed\n";
+        switch (key)
+        {
+        case GLFW_KEY_TAB:
+            _instance->_showUI = !_instance->_showUI;
+            break;
+        case GLFW_KEY_F11:
+            _instance->fullScreen(_instance->_fullScreen = !_instance->_fullScreen);
+            break;
+        default:
+            break;
+        }
+    }
 public:
-    GLExplorer(): GLBase::Application(800, 800, "GLSL Explorer", true, true),
+    GLExplorer(): GLBase::Application(800, 800, "GLSL Explorer", true, true, keyCallback),
         _vbo(nullptr, 3*sizeof(GLBase::Vector3), GL_STATIC_DRAW),
         _ibo(nullptr, 6, GL_STATIC_DRAW),
         _vao(), _shader(vertexShader, defaultFragShader), 
         _renderShader(vertexShader, simpleTextureShader)
     {
+        if(_instance) return;
+        _instance = this;
         GLBase::Shader::setGLSLErrorCallback(onGLSLError, this);
         _start = std::chrono::steady_clock::now();
         _vao.addBuffer(_vbo, GLBase::VertexLayout<1>(
@@ -118,6 +147,7 @@ public:
                 t.resize(size.first, size.second);
             _frameData.resize(size.first * size.second * 3);
         }
+        fullScreen(_fullScreen);
         _textures[_selectedRenderPass].bind();
         userInputs(size, delta);
         glViewport(0, 0, size.first, size.second);
@@ -223,6 +253,7 @@ public:
         app->_glslStatus.message = msg;
     }
     void updateUI() {
+        if(!_showUI) return;
         if(!_saveFrameStatus){
             _saveFrameStatus = true;
             ImGui::Begin("Error", &_saveFrameStatus);
@@ -231,7 +262,8 @@ public:
         }
         if(ImGui::BeginMainMenuBar()){
             if(ImGui::BeginMenu("View")){
-                ImGui::MenuItem("Show inspector", "Ctrl+1", &_showInspector);
+                ImGui::MenuItem("Show UI", "Tab", &_showUI);
+                ImGui::MenuItem("Fullscreen", "F11", &_fullScreen);
                 ImGui::EndMenu();
             }
             ImGui::EndMainMenuBar();
@@ -248,7 +280,6 @@ public:
             ImGui::End();
         }
 
-        if(!_showInspector) return;
         ImGui::Begin("Inspector");
         ImGui::Text("%f FPS", ImGui::GetIO().Framerate);
         if(ImGui::TreeNode("General settings")){
@@ -339,6 +370,7 @@ public:
     }
     ~GLExplorer() = default;
 };
+GLExplorer* GLExplorer::_instance = nullptr;
 
 
 int main(int argc, char const *argv[])

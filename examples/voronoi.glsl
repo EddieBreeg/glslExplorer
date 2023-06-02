@@ -40,6 +40,19 @@ const vec3 offsets[] = {
     vec3(1, 1, 1),
 };
 
+uvec3 pcg3d(uvec3 v)
+{
+    v = v * 1664525u + 1013904223u;
+    v.x += v.y*v.z; v.y += v.z*v.x; v.z += v.x*v.y;
+    v ^= v >> 16u;
+    v.x += v.y*v.z; v.y += v.z*v.x; v.z += v.x*v.y;
+    return v;
+}
+
+vec3 hash(vec3 p){
+    return pcg3d(floatBitsToUint(p)) / 4294967295.0;
+}
+
 float voronoi(vec3 P, out vec4 outColor){
     vec3 S = floor(P);
     vec3 F = fract(P);
@@ -47,7 +60,7 @@ float voronoi(vec3 P, out vec4 outColor){
     for(int i=0; i<27; ++i){
         vec3 t = offsets[i];
         vec3 cell = S+t;
-        vec3 p = randomness*texture(texNoise, cell.xy/1e3).xyz;
+        vec3 p = randomness*hash(cell);
         float r = chebichev(p+t - F);
         if(r < d){
             d = r;
