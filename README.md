@@ -55,7 +55,7 @@ In this section your can find the general setup of the program:
 
 ### View options
 
-UI can be toggled by pressing tab. Fullscreen mode can also be toggled by pressing F11.
+UI can be toggled by pressing space. Fullscreen mode can also be toggled by pressing F11.
 Both options are accessible in the View menu, at the top of the screen when UI is visible.
 
 ### Navigation
