@@ -68,7 +68,7 @@ private:
         // std::cout << "Key pressed\n";
         switch (key)
         {
-        case GLFW_KEY_TAB:
+        case GLFW_KEY_SPACE:
             _instance->_showUI = !_instance->_showUI;
             break;
         case GLFW_KEY_F11:
@@ -262,7 +262,7 @@ public:
         }
         if(ImGui::BeginMainMenuBar()){
             if(ImGui::BeginMenu("View")){
-                ImGui::MenuItem("Show UI", "Tab", &_showUI);
+                ImGui::MenuItem("Show UI", "Space", &_showUI);
                 ImGui::MenuItem("Fullscreen", "F11", &_fullScreen);
                 ImGui::EndMenu();
             }
